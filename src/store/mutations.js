@@ -13,6 +13,9 @@ const mutations = {
   },
   setPlayMode(state, n){
     state.playMode = n
+  },
+  setSourceId(state, n){
+    state.sourceId = n
   }
 
 }

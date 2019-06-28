@@ -4,7 +4,7 @@ import Vue from 'vue'
 import App from './App'
 import Mint from 'mint-ui'
 import store from './store'
-import { Navbar, TabItem, Toast, Spinner, Range, Popup } from 'mint-ui'
+import { Navbar, TabItem, Toast, Spinner, Range, Popup, Picker} from 'mint-ui'
 // import router from './router'
 import axios from 'axios'
 import $ from './util.js'
@@ -22,6 +22,7 @@ Vue.component(TabItem.name, TabItem);
 Vue.component(Spinner.name, Spinner);
 Vue.component(Range.name, Range);
 Vue.component(Popup.name, Popup);
+Vue.component(Picker.name, Picker);
 Vue.use(Mint);
 
 /* eslint-disable no-new */

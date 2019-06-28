@@ -25,11 +25,11 @@
             <div class="lrcItem" v-if="isGeting == 'error'" @click="getLrc">
               点击重新加载歌词
             </div>
-            <div class="lrcItem" v-if="isGeting == false && !music.lrcUrl">
+            <div class="lrcItem" v-if="isGeting == false && (!music.lrcUrl || music.lrcUrl == 'none')">
               没有歌词
             </div>
           </div>
-          <div v-for="(item, index) in lrcArr" class="lrcItem" :class="index==lrcIndex?'activeLrc':''" v-if="item && item[1] !=''">
+          <div v-for="(item, index) in lrcArr" class="lrcItem" :class="index==lrcIndex?'activeLrc':''" v-show="item && item[1] !=''">
             {{item[1]}}
           </div>
           <div style="height: 140px"></div>
@@ -180,7 +180,7 @@ export default {
       lrcArr:[],
       lrcIndex:null,
       isGet:false,
-      isGeting:false
+      isGeting:false,
     }
   },
   methods:{
@@ -343,7 +343,27 @@ export default {
     },
     getLrc(){
 //      getLrc.php?myUrl=
+      this.lrcArr = [];
       this.isGet = true;
+      if(this.music.lrcUrl == 'none'){
+        this.isGeting = false;
+        return;
+      }
+      if(this.music.lrcUrl == 'toLrc'){
+          this.isGeting = 'finish';
+//          console.log('0000000' + this.music.lrc)
+          this.music.lrc = this.music.lrc.replace(/\r\n/g,"");
+          this.music.lrc = this.music.lrc.replace(/\[/g,"<br/>[");
+//          console.log('1111111' + this.music.lrc)
+          var geciArr = this.music.lrc.split('<br/>');
+          if(geciArr.length > 0){
+            let that = this;
+            setTimeout(()=>{
+              that.parsinglrc(geciArr);
+            },200)
+          }
+          return;
+      }
       this.isGeting = true;
       this.$.ajax({
         url:'getLrc.php?myUrl=' + this.music.lrcUrl
@@ -374,12 +394,15 @@ export default {
           var time = lrc[a].match(pattern)[0];
           aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1].split('.')[0]);
           aLrc[1] = lrc[a].replace(pattern, '');
+          aLrc[1] = aLrc[1].replace(/\r|\n|\\s/, '');
+
           cacheLrc.push(aLrc);
         }
       }
       this.lrcArr = cacheLrc;
-      console.log(cacheLrc);
-      setTimeout(()=>{
+      this.$forceUpdate()
+      console.log(this.lrcArr);
+//      setTimeout(()=>{
         this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
           mouseWheel: true,
           taps: true,
@@ -387,7 +410,7 @@ export default {
           scrollX: false,
         })
         this.scroll.scrollTo(0, 0, 300)
-      },50)
+//      },50)
 
     },
     findLrcIndex(){
@@ -396,11 +419,11 @@ export default {
             if(i < this.lrcArr.length -1){
               if(this.currentTime >= this.lrcArr[i][0] && this.currentTime < this.lrcArr[i+1][0]){
                 cacheIndex = i;
-                if(cacheIndex !== this.lrcIndex){
+                if(cacheIndex !== this.lrcIndex && this.lrcArr[i][1] != ''){
                   this.lrcIndex = cacheIndex;
-//                  console.log(this.lrcIndex);
                   let avtiveLrc = document.querySelector('.activeLrc');
                   if(this.scroll){
+                    this.scroll.refresh();
                     this.scroll.scrollToElement(avtiveLrc,300,0,true);
                   }
                 }

@@ -51,7 +51,7 @@
         </mt-range>
       </div>
       <div class="controlBar">
-        <i class="fa fa-download" aria-hidden="true" @click="download" style="font-size: 18px; margin-right: 10px;"></i>
+        <i class="fa fa-download" aria-hidden="true"  style="font-size: 18px; margin-right: 10px" @click="download(music.mp3Url,music.title + ' - ' + music.artist)"></i>
         <i class="fa fa-step-backward big-icon" aria-hidden="true" @click="ended(true, true)"></i>
         <i class="fa fa-play big-icon" aria-hidden="true" v-if="!isPlay" @click="setPlay"></i>
         <i class="fa fa-pause big-icon" aria-hidden="true" v-if="isPlay" @click="setPlay"></i>
@@ -86,7 +86,7 @@
       </div>
 
       <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="ended" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
-      <iframe style="display: none" :src="downloadUrl"></iframe>
+<!--      <iframe style="display: none" :src="downloadUrl"></iframe>-->
     </div>
 
     <!--播放列表-->
@@ -107,6 +107,7 @@
 
 <script>
   import BScroll from 'better-scroll'
+  import FileSaver from 'file-saver';
 export default {
   name: 'play',
   computed:{
@@ -331,8 +332,9 @@ export default {
             this.audio.play()
         }
     },
-    download(){
-        this.downloadUrl = this.music.mp3Url;
+    download(url, name){
+        // this.downloadUrl = this.music.mp3Url;
+        FileSaver.saveAs(url, name)
     },
     clickMusic(item){
       if(this.playId != item.id){
@@ -383,20 +385,31 @@ export default {
       var regex=/\[|\]/g;
       var regex1=/ti/g;
       var regex2=/ar/g;
+      var pattern1 = /\d{2}:\d{2}.\d{3}/g;
       var pattern = /\d{2}:\d{2}.\d{2}/g;
       var cacheLrc = [];
       // Vue.set(this.song,'lrc',cacheLrc);
       for(let a = 0; a < lrc.length; a++){
         lrc[a] = lrc[a].replace(regex,'');
         var itemArr = lrc[a].split(":");
-        if(pattern.test(lrc[a])){
+        if(pattern1.test(lrc[a])){
           var aLrc = [];
-          var time = lrc[a].match(pattern)[0];
+          var time = lrc[a].match(pattern1)[0];
           aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1].split('.')[0]);
-          aLrc[1] = lrc[a].replace(pattern, '');
+          aLrc[1] = lrc[a].replace(pattern1, '');
           aLrc[1] = aLrc[1].replace(/\r|\n|\\s/, '');
 
           cacheLrc.push(aLrc);
+        }else {
+          if(pattern.test(lrc[a])){
+            var aLrc = [];
+            var time = lrc[a].match(pattern)[0];
+            aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1].split('.')[0]);
+            aLrc[1] = lrc[a].replace(pattern, '');
+            aLrc[1] = aLrc[1].replace(/\r|\n|\\s/, '');
+
+            cacheLrc.push(aLrc);
+          }
         }
       }
       this.lrcArr = cacheLrc;
@@ -440,6 +453,44 @@ export default {
             }
 
         }
+    },
+  //  获取网易mp3链接
+    getWangyi(){
+      this.$.ajax({
+        url:'https://api.imjad.cn/cloudmusic/?type=song&id=' + this.music.id + '&search_type=1',
+        method:'GET'
+      }).then((res)=>{
+        console.log(res);
+        if(res.code == 200){
+          if(res.data[0].url){
+            this.music.mp3Url = res.data[0].url
+          }else {
+            this.$toast({
+              message: '无法播放此歌曲',
+              position: 'bottom',
+              duration: 3000
+            });
+            if(this.playList.length > 0){
+              this.ended(true);
+            }else {
+              this.$store.commit('setPlayId',null)
+            }
+
+          }
+        }else {
+          this.$toast({
+            message: '无法播放此歌曲',
+            position: 'bottom',
+            duration: 3000
+          });
+        }
+      }).catch(err=>{
+        this.$toast({
+          message: '无法播放此歌曲',
+          position: 'bottom',
+          duration: 3000
+        });
+      });
     }
   },
   watch:{
@@ -469,7 +520,12 @@ export default {
           this.getLrc();
         }
         this.lrcIndex = null;
-        this.lrcArr = []
+        this.lrcArr = [];
+        this.audio.currentTime = 0;
+        this.audio.pause();
+        if(this.music.type == 'netease' && !this.music.mp3Url){
+          this.getWangyi();
+        }
     },
     isPlay(){
         if(this.isPlay){
@@ -506,6 +562,9 @@ export default {
       console.log(this.audio);
       if(!this.isGet && !!this.music.lrcUrl){
           this.getLrc();
+      }
+      if(this.music.type == 'netease' && !this.music.mp3Url){
+        this.getWangyi();
       }
   }
 }
@@ -579,13 +638,15 @@ export default {
     border:5px solid #3F3D3E;
   }
   .name {
-    margin-top: 18px;
+    /*margin-top: 18px;*/
     font-size: 18px;
     height: 24px;
     text-align: center;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    max-width: 75%;
+    margin: 18px auto 0;
   }
   .artist {
     font-size: 14px;

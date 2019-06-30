@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="inputWrap">
-      <input type="search" id="searchInput" placeholder="搜单曲、搜歌手、搜专辑" v-model="searchValue" @input="inputFun" @keyup.enter="search" ref="search">
+      <input type="search" id="searchInput" placeholder="输入后按下回车搜索" v-model="searchValue" @input="inputFun" @keyup.enter="search" ref="search">
       <span class="sourceName" @click="showSourceList = true">{{source.name}}</span>
     </div>
 
@@ -13,7 +13,7 @@
     <div id="listBox" ref="listBox">
       <div id="listContent">
         <div >
-          <div v-for="(item, index) in searchList" class="aSong" @click="playMusic(item)" :class="playId==item.id?'activeMusic':''" v-show="item.mp3Url">
+          <div v-for="(item, index) in searchList" class="aSong" @click="playMusic(item)" :class="playId==item.id?'activeMusic':''">
             <div class="songTitle">{{item.title}}</div>
             <div class="songArtist" :class="playId==item.id?'activeMusic':''">{{item.artist}} <span style="font-weight: 600" v-if="item.album">·</span><span v-if="item.album"> {{item.album}}</span></div>
           </div>
@@ -134,6 +134,9 @@ export default {
                 setTimeout(()=>{
                   this.scroll.refresh()
                 })
+              }else if(res.code == 404){
+                this.searchFinish = true;
+                this.isLoading = false;
               }else {
                 this.searchFinish = true;
                 this.isLoading = false;
@@ -176,6 +179,7 @@ export default {
           list[i].album = null;
           list[i].mp3Url = list[i].url
           list[i].cover = list[i].pic
+
           if(list[i].lrc){
             list[i].lrcUrl = 'toLrc'
           }else {
@@ -211,6 +215,12 @@ export default {
           setTimeout(()=>{
             this.scroll.refresh()
           })
+        }else if(res.code == 404){
+          this.$toast({
+            message: '没有更多',
+            position: 'bottom',
+            duration: 3000
+          });
         }else {
           this.searchFinish = true;
           this.moreLoading = false;
@@ -277,6 +287,7 @@ export default {
     padding: 0;
     margin:0;
     height: 100%;
+    overflow: hidden;
   }
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -287,15 +298,18 @@ export default {
   width: 100%;
   height: calc(100% - 1px);
   padding-top:1px;
+  overflow: hidden;
 }
   #searchInput{
     width: calc(100% - 80px);
     padding: 5px 8px;
     outline: none;
+    margin-top: 1px;
   }
   #inputWrap{
     width: 90%;
     margin:20px 5% 3px;
+    padding-top: 1px;
   }
   #listBox{
     margin-top: 20px;
@@ -335,6 +349,8 @@ export default {
   }
   #playPage{
     /*transition: all 0.3s;*/
+    position: absolute;
+    z-index: 2;
   }
   .activeMusic{
     color:#26a2ff;

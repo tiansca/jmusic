@@ -17,7 +17,7 @@
             <div class="songTitle">{{item.title}}</div>
             <div class="songArtist" :class="playId==item.id?'activeMusic':''">{{item.artist}} <span style="font-weight: 600" v-if="item.album">·</span><span v-if="item.album"> {{item.album}}</span></div>
           </div>
-          <div class="moreButton" v-show="searchList && searchList.length > 0 && searchType != 1" @click="getMore(page)">
+          <div class="moreButton" v-show="searchList && searchList.length > 0 && sourceId != 1" @click="getMore(page)">
             <span v-show="!moreLoading">加载更多</span>
             <mt-spinner type="fading-circle" class="moreLoading" color="#666" :size="20" v-show="moreLoading"></mt-spinner>
           </div>

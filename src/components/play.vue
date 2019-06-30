@@ -1,92 +1,89 @@
 <template>
   <div class="bigBox">
-    <div class="background" :style="{'backgroundImage':'url('+ music.cover +')'}" :class="showPlay?'':'hide_back'">
+    <div v-show="showPlay">
+      <div class="background" :style="{'backgroundImage':'url('+ music.cover +')'}" :class="showPlay?'':'hide_back'">
 
-    </div>
-    <div class="hello" :class="showPlay?'':'hide_back1'">
+      </div>
+      <div class="hello" :class="showPlay?'':'hide_back1'">
       <span class="close"  @click="close">
         <i class="fa fa-angle-double-down" aria-hidden="true"></i>
       </span>
 
-      <div class="name">
-        {{music.title}}
-      </div>
-      <div class="artist">
-        {{music.artist}}
-      </div>
-      <div class="cover" :style="{'backgroundImage':'url('+ music.cover +')'}"></div>
+        <div class="name">
+          {{music.title}}
+        </div>
+        <div class="artist">
+          {{music.artist}}
+        </div>
+        <div class="cover" :style="{'backgroundImage':'url('+ music.cover +')'}"></div>
 
-      <div class="lrcBox" ref="lrcBox">
-        <div>
-          <div style="height: 120px;padding-top: 20px;">
-            <div class="lrcItem" v-if="isGeting === true">
-              正在加载歌词...
+        <div class="lrcBox" ref="lrcBox">
+          <div>
+            <div style="height: 120px;padding-top: 20px;">
+              <div class="lrcItem" v-if="isGeting === true">
+                正在加载歌词...
+              </div>
+              <div class="lrcItem" v-if="isGeting == 'error'" @click="getLrc">
+                点击重新加载歌词
+              </div>
+              <div class="lrcItem" v-if="isGeting == false && (!music.lrcUrl || music.lrcUrl == 'none')">
+                没有歌词
+              </div>
             </div>
-            <div class="lrcItem" v-if="isGeting == 'error'" @click="getLrc">
-              点击重新加载歌词
+            <div v-for="(item, index) in lrcArr" class="lrcItem" :class="index==lrcIndex?'activeLrc':''" v-show="item && item[1] !=''">
+              {{item[1]}}
             </div>
-            <div class="lrcItem" v-if="isGeting == false && (!music.lrcUrl || music.lrcUrl == 'none')">
-              没有歌词
-            </div>
-          </div>
-          <div v-for="(item, index) in lrcArr" class="lrcItem" :class="index==lrcIndex?'activeLrc':''" v-show="item && item[1] !=''">
-            {{item[1]}}
-          </div>
-          <div style="height: 140px"></div>
-        </div>
-      </div>
-      <div class="rateBar" @touchstart="touchstart($event)"
-           @touchend="touchend($event)"
-           @mousedown="touchstart($event)"
-           @mousemove="touchmove($event)"
-           @mouseup="touchend($event)"
-           @touchmove="touchmove($event)">
-        <mt-range
-          v-model="rate"
-          :min="0"
-          :max="100"
-          :bar-height="2">
-          <div slot="start">{{this.currentTime1}}</div>
-          <div slot="end">{{this.duration1}}</div>
-        </mt-range>
-      </div>
-      <div class="controlBar">
-        <i class="fa fa-download" aria-hidden="true"  style="font-size: 18px; margin-right: 10px" @click="download(music.mp3Url,music.title + ' - ' + music.artist)"></i>
-        <i class="fa fa-step-backward big-icon" aria-hidden="true" @click="ended(true, true)"></i>
-        <i class="fa fa-play big-icon" aria-hidden="true" v-if="!isPlay" @click="setPlay"></i>
-        <i class="fa fa-pause big-icon" aria-hidden="true" v-if="isPlay" @click="setPlay"></i>
-        <i class="fa fa-step-forward big-icon" aria-hidden="true" @click="ended(true)"></i>
-        <i @click="setplayMode">
-          <img src="../assets/loop.png" class="playMode" v-if="playMode == 1">
-          <img src="../assets/repeat.png" class="playMode" v-if="playMode == 2">
-          <img src="../assets/random.png" class="playMode" v-if="playMode == 3">
-        </i>
-      </div>
-
-
-
-      <div class="bottomBar" v-show="!showPlay" @click="open">
-        <div class="bottomCover" :style="{'backgroundImage':'url('+ music.cover +')'}"></div>
-        <div class="bottomText">
-          <div class="bottomName">
-            {{music.title}}
-          </div>
-          <div class="bottomArtist">
-            {{music.artist}}
+            <div style="height: 140px"></div>
           </div>
         </div>
-
-        <div style="font-size: 22px;color:#333" class="bottomPlay">
-          <i class="fa fa-play" aria-hidden="true" v-if="!isPlay" @click.stop="setPlay"></i>
-          <i class="fa fa-pause" aria-hidden="true" v-if="isPlay" @click.stop="setPlay"></i>
+        <div class="rateBar" @touchstart="touchstart($event)"
+             @touchend="touchend($event)"
+             @mousedown="touchstart($event)"
+             @mousemove="touchmove($event)"
+             @mouseup="touchend($event)"
+             @touchmove="touchmove($event)">
+          <mt-range
+            v-model="rate"
+            :min="0"
+            :max="100"
+            :bar-height="2">
+            <div slot="start">{{this.currentTime1}}</div>
+            <div slot="end">{{this.duration1}}</div>
+          </mt-range>
         </div>
-        <div style="float: right;font-size: 20px;color:#333" @click.stop="showPlayList = true">
-          <i class="fa fa-list-ul" aria-hidden="true"></i>
+        <div class="controlBar">
+          <i class="fa fa-download" aria-hidden="true"  style="font-size: 18px; margin-right: 10px" @click="download(music.mp3Url,music.title + ' - ' + music.artist)"></i>
+          <i class="fa fa-step-backward big-icon" aria-hidden="true" @click="ended(true, true)"></i>
+          <i class="fa fa-play big-icon" aria-hidden="true" v-if="!isPlay" @click="setPlay"></i>
+          <i class="fa fa-pause big-icon" aria-hidden="true" v-if="isPlay" @click="setPlay"></i>
+          <i class="fa fa-step-forward big-icon" aria-hidden="true" @click="ended(true)"></i>
+          <i @click="setplayMode">
+            <img src="../assets/loop.png" class="playMode" v-if="playMode == 1">
+            <img src="../assets/repeat.png" class="playMode" v-if="playMode == 2">
+            <img src="../assets/random.png" class="playMode" v-if="playMode == 3">
+          </i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottomBar" v-show="!showPlay" @click="open">
+      <div class="bottomCover" :style="{'backgroundImage':'url('+ music.cover +')'}"></div>
+      <div class="bottomText">
+        <div class="bottomName">
+          {{music.title}}
+        </div>
+        <div class="bottomArtist">
+          {{music.artist}}
         </div>
       </div>
 
-      <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="ended" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
-<!--      <iframe style="display: none" :src="downloadUrl"></iframe>-->
+      <div style="font-size: 22px;color:#333" class="bottomPlay">
+        <i class="fa fa-play" aria-hidden="true" v-if="!isPlay" @click.stop="setPlay"></i>
+        <i class="fa fa-pause" aria-hidden="true" v-if="isPlay" @click.stop="setPlay"></i>
+      </div>
+      <div style="float: right;font-size: 20px;color:#333" @click.stop="showPlayList = true">
+        <i class="fa fa-list-ul" aria-hidden="true"></i>
+      </div>
     </div>
 
     <!--播放列表-->
@@ -94,13 +91,18 @@
       v-model="showPlayList"
       position="bottom">
       <h3 style="padding-left:20px">播放列表</h3>
-      <div id="playListContent">
-        <div v-for="(item, index) in playList" class="aSong" @click="clickMusic(item)" :class="playId==item.id?'activeMusic':''">
-          <div class="songTitle">{{item.title}}</div>
-          <div class="songArtist" :class="playId==item.id?'activeMusic':''">{{item.artist}} <span style="font-weight: 600">·</span> {{item.album}}</div>
+      <div id="playListContent" ref="playListContent">
+        <div>
+          <div v-for="(item, index) in playList" class="aSong" @click="clickMusic(item)" :class="playId==item.id?'activeMusic':''">
+            <div class="songTitle">{{item.title}}</div>
+            <div class="songArtist" :class="playId==item.id?'activeMusic':''">{{item.artist}} <span style="font-weight: 600">·</span> {{item.album}}</div>
+          </div>
+          <div style="height: 50px;"></div>
         </div>
       </div>
     </mt-popup>
+
+    <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="ended" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
   </div>
 
 </template>
@@ -182,6 +184,7 @@ export default {
       lrcIndex:null,
       isGet:false,
       isGeting:false,
+      playScroll:null
     }
   },
   methods:{
@@ -422,7 +425,6 @@ export default {
           scrollY: true,
           scrollX: false,
         })
-        this.scroll.scrollTo(0, 0, 300)
 //      },50)
 
     },
@@ -498,8 +500,10 @@ export default {
         var playPage = document.querySelector('.bigBox');
         if(!this.showPlay){
             playPage.style.top = 'calc(100% - 50px)';
+            playPage.style.height = '0';
         }else {
             playPage.style.top = '0';
+            playPage.style.height = '100%';
             if(this.lrcArr && this.lrcArr.length > 0){
                 setTimeout(()=>{
                   let avtiveLrc = document.querySelector('.activeLrc');
@@ -535,8 +539,18 @@ export default {
           var cover = document.querySelector('.cover');
           cover.style.animationPlayState = 'paused';
         }
-
-    }
+    },
+    playList: {
+      handler(val, oldVal) {
+        this.playScroll = new BScroll(this.$refs.playListContent,{click:true,
+          mouseWheel: true,
+          taps: true,
+          scrollY: true,
+          scrollX: false,
+        });
+      },
+      deep: true // 监听这个对象中的每一个属性变化
+    },
   },
   mounted(){
       this.isPlay = false;
@@ -566,6 +580,12 @@ export default {
       if(this.music.type == 'netease' && !this.music.mp3Url){
         this.getWangyi();
       }
+      this.playScroll = new BScroll(this.$refs.playListContent,{click:true,
+        mouseWheel: true,
+        taps: true,
+        scrollY: true,
+        scrollX: false,
+      });
   }
 }
 </script>
@@ -577,7 +597,7 @@ export default {
     height: 100%;
     position: fixed;
     top:0;
-    transition: all 0.25s
+    transition: top 0.25s
   }
   .background{
     width: 100%;
@@ -591,7 +611,6 @@ export default {
     -webkit-filter: blur(4px) contrast(40%) saturate(800%) sepia(100%);  /* Chrome, Safari, Opera */
     filter: blur(4px) contrast(40%) saturate(800%) sepia(100%);
     opacity: 1;
-    /*transition: all 0.3s;*/
   }
   .hide_back{
     opacity: 0;
@@ -618,6 +637,7 @@ export default {
     z-index: 3;
     display: flex;
     align-items: center;
+    transition: all 0.25s
   }
   .close{
     font-size: 26px;
@@ -727,7 +747,7 @@ export default {
     width: 100%;
     max-height: 70vh;
     min-height: 300px;
-    overflow: auto;
+    overflow: hidden;
   }
   .mint-popup-bottom{
     width: 100%!important;

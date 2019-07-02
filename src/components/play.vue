@@ -498,12 +498,15 @@ export default {
   watch:{
     showPlay(){
         var playPage = document.querySelector('.bigBox');
+        var bottomBar = document.querySelector('.bottomBar');
         if(!this.showPlay){
             playPage.style.top = 'calc(100% - 50px)';
             playPage.style.height = '0';
+            bottomBar.style.opacity = '1'
         }else {
             playPage.style.top = '0';
             playPage.style.height = '100%';
+            bottomBar.style.opacity = '0'
             if(this.lrcArr && this.lrcArr.length > 0){
                 setTimeout(()=>{
                   let avtiveLrc = document.querySelector('.activeLrc');
@@ -597,7 +600,7 @@ export default {
     height: 100%;
     position: fixed;
     top:0;
-    transition: top 0.25s
+    transition: top 0.3s
   }
   .background{
     width: 100%;
@@ -637,7 +640,7 @@ export default {
     z-index: 3;
     display: flex;
     align-items: center;
-    transition: all 0.25s
+    transition: opacity 0.35s
   }
   .close{
     font-size: 26px;

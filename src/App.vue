@@ -12,6 +12,11 @@
     </mt-navbar>
     <div id="listBox" ref="listBox">
       <div id="listContent">
+        <div id="topLoading" v-if="topLoading" ref="topLoading">
+          <div v-if="triggerRefresh && isTopLoading1 == false" ref="trigger" id="trigger">{{topLoadingText}}</div>
+          <mt-spinner type="fading-circle" class="moreLoading" color="#666" :size="20" v-show="isTopLoading"></mt-spinner>
+        </div>
+
         <div >
           <div v-for="(item, index) in searchList" class="aSong" @click="playMusic(item)" :class="playId==item.id?'activeMusic':''">
             <div class="songTitle">{{item.title}}</div>
@@ -82,7 +87,12 @@ export default {
         showSourceList:false,
         pickerId:1,
         page:1,
-        moreLoading:false
+        moreLoading:false,
+        triggerRefresh: false,
+        topLoading:false,
+        isTopLoading:false,
+        isTopLoading1:false,
+        topLoadingText:''
       }
   },
   methods:{
@@ -91,7 +101,7 @@ export default {
         this.searchList = [];
         this.page = 1;
     },
-    search(){
+    search(type){
         this.$refs.search.blur();
         this.searchFinish = false;
         if(!this.searchValue){
@@ -101,20 +111,35 @@ export default {
             duration: 3000
           });
         }else {
-          this.isLoading = true;
-          this.searchList = [];
+          if(type !== 'refresh'){
+            this.isLoading = true;
+            this.searchList = [];
+          }
           if(this.sourceId == 1){
             this.$.ajax({
               method:'GET',
               url:'getMusicList.php?keyword=' + this.searchValue + '&type=' + this.searchType,
             }).then((res)=>{
               this.searchFinish = true;
+              this.isTopLoading = false;
               console.log(res);
               this.searchList = res;
               this.isLoading = false;
               setTimeout(()=>{
                 this.scroll.refresh()
-              })
+              });
+              this.scroll.finishPullDown()
+            }).catch((err)=>{
+              this.searchFinish = true;
+              this.isTopLoading = false;
+              this.isLoading = false;
+              console.log(err);
+              this.scroll.finishPullDown()
+              this.$toast({
+                message: '搜索失败，请重试',
+                position: 'bottom',
+                duration: 3000
+              });
             })
           }else{
             this.$.ajax({
@@ -128,6 +153,8 @@ export default {
               })
             }).then((res)=>{
               console.log(res);
+              this.scroll.finishPullDown();
+              this.isTopLoading = false;
               this.searchFinish = true;
               this.isLoading = false;
               if(res.code == 200){
@@ -148,6 +175,8 @@ export default {
                 });
               }
             }).catch(err=>{
+                this.scroll.finishPullDown();
+                this.isTopLoading = false;
                 this.searchFinish = true;
                 this.isLoading = false;
                 console.log(err);
@@ -208,6 +237,7 @@ export default {
         })
       }).then((res)=>{
 //        console.log(res);
+        this.scroll.finishPullUp()
         this.page = page + 1;
         this.searchFinish = true;
         this.moreLoading = false;
@@ -232,6 +262,7 @@ export default {
           });
         }
       }).catch(err=>{
+        this.scroll.finishPullUp()
         this.searchFinish = true;
         this.moreLoading = false;
         console.log(err);
@@ -249,6 +280,73 @@ export default {
       taps: true,
       scrollY: true,
       scrollX: false,
+      pullUpLoad: {
+        threshold: -30
+      },
+      pullDownRefresh: {
+// 下拉距离超过30px触发pullingDown事件
+        threshold: 30,
+// 回弹停留在距离顶部20px的位置
+        stop: 20
+      }
+    });
+
+    //上拉加载
+    this.scroll.on('pullingUp', () => {
+      console.log('处理上拉加载操作');
+      if(this.sourceId != 1){
+        this.getMore();
+      }
+      /*setTimeout(() => {
+// 事情做完，需要调用此方法告诉 better-scroll 数据已加载，否则上拉事件只会执行一次
+        this.scroll.finishPullUp()
+      }, 2000)*/
+    });
+
+    //下拉刷新
+    this.scroll.on('pullingDown', () => {
+      console.log('处理下拉刷新操作');
+      this.isTopLoading = true;
+//      setTimeout(() => {
+//        console.log('asfsaf')
+//// 事情做完，需要调用此方法告诉 better-scroll 数据已加载，否则下拉事件只会执行一次
+//        this.scroll.finishPullDown()
+//      }, 2000)
+      this.search('refresh');
+    })
+
+    //监听滚动
+    this.scroll.on('scroll',(pos)=>{
+        if(!this.searchValue){
+            return;
+        }
+        if(pos.y > 0){
+          this.topLoading = true;
+          if(this.$refs.topLoading){
+            this.$refs.topLoading.style.height = pos.y + 'px'
+            this.$refs.topLoading.style.top = - pos.y + 'px';
+          }
+          this.triggerRefresh = true;
+          if(this.$refs.trigger){
+            if(pos.y > 30){
+              this.topLoadingText = '释放立即刷新'
+            }else if(pos.y > 14){
+              this.topLoadingText = '下拉刷新'
+            }else {
+              this.topLoadingText = ''
+            }
+          }
+
+        }else {
+            this.topLoadingText = ''
+            if(this.$refs.topLoading){
+              this.$refs.topLoading.style.height = '0px'
+              this.$refs.topLoading.style.top = '0px';
+              this.topLoading = false;
+            }
+        }
+//        this.$refs.trigger.style.height = -(pos.y - 14) / 2 + 'px'
+//
     });
 
     this.slots = [
@@ -277,6 +375,21 @@ export default {
     sourceId(n, o){
         if(this.searchValue){
             this.search();
+        }
+        let listBox = document.querySelector('#listBox')
+        if(this.sourceId == 1){
+          listBox.style.height = 'calc(100% - 120px)'
+        }else {
+          listBox.style.height = 'calc(100% - 75px)'
+        }
+    },
+    isTopLoading(){
+        if(this.isTopLoading){
+            this.isTopLoading1 = true
+        }else {
+            setTimeout(()=>{
+              this.isTopLoading1 = false
+            },500)
         }
     }
   }
@@ -324,11 +437,12 @@ export default {
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .songtitle{
+  .songTitle{
     font-size: 16px;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+    width:100%;
   }
   .aSong{
     width: 90%;
@@ -405,5 +519,21 @@ export default {
     width: 20px;
     text-align: center;
     margin: 0 auto;
+  }
+  #topLoading{
+    width: 100%;
+    text-align: center;
+    position: absolute;
+    /*top:-30px;*/
+    font-size: 13px;
+    /*background-color: #efefef;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color:#666
+  }
+  #trigger{
+    width: 100%;
+
   }
 </style>

@@ -10,7 +10,7 @@ const state = {
       {id:1,name:'站内'},
       {id:2,name:'QQ',label:'qq'},
       {id:3,name:'网易云',label:'netease'},
-      {id:4,name:'百度',label:'baidu'},
+      // {id:4,name:'百度',label:'baidu'},
       {id:5,name:'酷我',label:'kuwo'},
       {id:6,name:'蜻蜓',label:'qingting'},
       {id:7,name:'喜马拉雅',label:'ximalaya'},

@@ -42,7 +42,7 @@
     <!--选择搜索来源-->
     <mt-popup
       v-model="showSourceList"
-      position="bottom" style="width: 100%">
+      position="bottom" style="width: 100%;padding-top: 12px;">
       <mt-picker :slots="slots" @change="onValuesChange" value-key="name" :defaultIndex="pickerId"></mt-picker>
       <div style="text-align: center;margin: 18px 0;">
         <span class="button" @click="showSourceList = false">确定</span>
@@ -102,6 +102,7 @@ export default {
         this.page = 1;
     },
     search(type){
+        this.page = 1;
         this.$refs.search.blur();
         this.searchFinish = false;
         if(!this.searchValue){
@@ -294,8 +295,8 @@ export default {
     //上拉加载
     this.scroll.on('pullingUp', () => {
       console.log('处理上拉加载操作');
-      if(this.sourceId != 1){
-        this.getMore();
+      if(this.sourceId != 1 && this.searchValue){
+        this.getMore(this.page);
       }
       /*setTimeout(() => {
 // 事情做完，需要调用此方法告诉 better-scroll 数据已加载，否则上拉事件只会执行一次

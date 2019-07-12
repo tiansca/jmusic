@@ -29,6 +29,9 @@
               <div class="lrcItem" v-if="isGeting == false && (!music.lrcUrl || music.lrcUrl == 'none')">
                 没有歌词
               </div>
+              <div class="lrcItem" v-if="isGeting == 'finish' && this.lrcArr.length == 0">
+                没有歌词
+              </div>
             </div>
             <div v-for="(item, index) in lrcArr" class="lrcItem" :class="index==lrcIndex?'activeLrc':''" v-show="item && item[1] !=''">
               {{item[1]}}
@@ -263,7 +266,9 @@ export default {
         }
 
         setTimeout(()=>{
-          this.audio.play()
+          if(this.music.mp3Url){
+            this.audio.play()
+          }
         })
 
     },
@@ -465,7 +470,8 @@ export default {
         console.log(res);
         if(res.code == 200){
           if(res.data[0].url){
-            this.music.mp3Url = res.data[0].url
+            this.music.mp3Url = res.data[0].url,
+            this.audio.play()
           }else {
             this.$toast({
               message: '无法播放此歌曲',
@@ -492,6 +498,41 @@ export default {
           position: 'bottom',
           duration: 3000
         });
+      });
+    },
+    //获取酷我歌词
+    getKuwoLrc(){
+      this.lrcArr = [];
+      this.isGet = true;
+      this.isGeting = true;
+      this.$.ajax({
+        url:'http://m.kuwo.cn/newh5/singles/songinfoandlrc?musicId=' + this.music.id,
+        method:'GET'
+      }).then((res)=>{
+        console.log(res);
+        if(res.status == 200){
+          if(res.data.songinfo && res.data.songinfo.pic){
+              this.music.cover = res.data.songinfo.pic
+          }
+          this.isGeting = 'finish'
+          console.log(res.data.lrclist);
+          if(res.data.lrclist && res.data.lrclist.length > 0){
+            for(var i = 0; i < res.data.lrclist.length; i++){
+              this.lrcArr.push([res.data.lrclist[i].time, res.data.lrclist[i].lineLyric])
+            }
+          }
+          this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
+            mouseWheel: true,
+            taps: true,
+            scrollY: true,
+            scrollX: false,
+          })
+          console.log(this.lrcArr)
+        }else {
+          this.isGeting = 'error'
+        }
+      }).catch(err=>{
+        this.isGeting = 'error'
       });
     }
   },
@@ -523,8 +564,10 @@ export default {
         this.isGet = false;
         this.isPlay = false;
         console.log('*********'+this.isPlay);
-        if(this.music.lrcUrl){
+        if(this.music.lrcUrl && this.music.type != 'kuwo'){
           this.getLrc();
+        }else if(this.music.type == 'kuwo'){
+            this.getKuwoLrc();
         }
         this.lrcIndex = null;
         this.lrcArr = [];
@@ -577,9 +620,12 @@ export default {
 
       this.audio = document.querySelector('.audio');
       console.log(this.audio);
-      if(!this.isGet && !!this.music.lrcUrl){
+      if(!this.isGet && !!this.music.lrcUrl && this.music.type != 'kuwo'){
           this.getLrc();
+      }else if(!this.isGet && this.music.type == 'kuwo'){
+          this.getKuwoLrc();
       }
+      console.log(this.music)
       if(this.music.type == 'netease' && !this.music.mp3Url){
         this.getWangyi();
       }
@@ -640,7 +686,8 @@ export default {
     z-index: 3;
     display: flex;
     align-items: center;
-    transition: opacity 0.35s
+    transition: opacity 0.35s;
+    max-width: 900px;
   }
   .close{
     font-size: 26px;

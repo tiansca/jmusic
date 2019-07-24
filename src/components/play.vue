@@ -105,7 +105,7 @@
       </div>
     </mt-popup>
 
-    <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="ended" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
+    <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="error" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
   </div>
 
 </template>
@@ -187,7 +187,8 @@ export default {
       lrcIndex:null,
       isGet:false,
       isGeting:false,
-      playScroll:null
+      playScroll:null,
+      canBack:false
     }
   },
   methods:{
@@ -195,7 +196,7 @@ export default {
         this.$store.commit('setShowPlay',false)
     },
     open(){
-        this.$store.commit('setShowPlay',true)
+        this.$store.commit('setShowPlay',true);
     },
     ended(next,back){
         console.log(next,back);
@@ -271,6 +272,14 @@ export default {
           }
         })
 
+    },
+    error(){
+        this.music.mp3Url = '';
+        this.$toast({
+          message: '无法播放此歌曲',
+          position: 'bottom',
+          duration: 3000
+        });
     },
     start(){
 //        alert('开始');
@@ -479,7 +488,7 @@ export default {
               duration: 3000
             });
             if(this.playList.length > 0){
-              this.ended(true);
+//              this.ended(true);
             }else {
               this.$store.commit('setPlayId',null)
             }
@@ -534,6 +543,41 @@ export default {
       }).catch(err=>{
         this.isGeting = 'error'
       });
+    },
+    //获取qq链接
+    getQQurl(){
+        //token
+      var url = 'https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg?format=json205361749&platform=yqq&cid=205361749&songmid=' + this.music.id + '&filename=C400' + this.music.id + '.m4a&guid=126548449';
+      url = encodeURIComponent(url);
+      this.$.ajax({
+        url:'http://localhost/get/qqtoken.php?url=' + url,
+        method:'GET'
+      }).then((res)=>{
+        console.log(res)
+      })
+    },
+    //监听返回
+    goBack(){
+        if(this.showPlay){
+          history.pushState(null, null, document.URL);
+          this.$store.commit('setShowPlay',false);
+        }else {
+            if(this.canBack){
+                window.history.back(-1);
+            }else {
+              history.pushState(null, null, document.URL);
+              this.$toast({
+                message: '再按一次退出',
+                position: 'bottom',
+                duration: 3000
+              });
+              this.canBack = true;
+              setTimeout(()=>{
+                  this.canBack = false;
+              },1000)
+            }
+        }
+
     }
   },
   watch:{
@@ -576,6 +620,10 @@ export default {
         if(this.music.type == 'netease' && !this.music.mp3Url){
           this.getWangyi();
         }
+        if(this.music.type == 'qq'){
+            this.music.mp3Url = '';
+            this.getQQurl()
+        }
     },
     isPlay(){
         if(this.isPlay){
@@ -588,15 +636,17 @@ export default {
     },
     playList: {
       handler(val, oldVal) {
-        this.playScroll = new BScroll(this.$refs.playListContent,{click:true,
-          mouseWheel: true,
-          taps: true,
-          scrollY: true,
-          scrollX: false,
-        });
+        this.playScroll.refresh()
       },
       deep: true // 监听这个对象中的每一个属性变化
     },
+    showPlayList(){
+        if(this.showPlayList){
+            setTimeout(()=>{
+              this.playScroll.refresh()
+            },200)
+        }
+    }
   },
   mounted(){
       this.isPlay = false;
@@ -635,7 +685,16 @@ export default {
         scrollY: true,
         scrollX: false,
       });
-  }
+
+      //监听返回
+    if (window.history && window.history.pushState) {
+      history.pushState(null, null, document.URL);
+      window.addEventListener('popstate', this.goBack, false);
+    }
+  },
+  destroyed(){
+    window.removeEventListener('popstate', this.goBack, false);
+  },
 }
 </script>
 

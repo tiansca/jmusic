@@ -449,7 +449,7 @@ export default {
     width: 90%;
     margin: 0 auto;
     text-align: left;
-    border-bottom: 1px solid #999;
+    border-bottom: 1px solid #eee;
     padding: 8px 0;
     cursor: pointer;
   }

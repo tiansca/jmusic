@@ -105,7 +105,7 @@
       </div>
     </mt-popup>
 
-    <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="error" @timeupdate="timeupdate" hidden="true" @pause="onPause"></audio>
+    <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="error" @timeupdate="timeupdate" hidden="true" @pause="onPause" ></audio>
   </div>
 
 </template>
@@ -188,10 +188,15 @@ export default {
       isGet:false,
       isGeting:false,
       playScroll:null,
-      canBack:false
+      canBack:false,
+      showLineNum:0
     }
   },
   methods:{
+    play(){
+      this.audio.play();
+      console.log('可以播放')
+    },
     close(){
         this.$store.commit('setShowPlay',false)
     },
@@ -239,13 +244,22 @@ export default {
               this.audio.pause();
               this.audio.currentTime = 0;
               this.audio.play();
+              if(!this.music.type){
+                this.updateHotCount(this.music.id)
+              }
               return;
           }
           this.isPlay = false;
           if(this.playMode == 1 || (next===true && this.playMode == 2)){
+              console.log('****************2');
             this.playIndex += 1;
             if(this.playIndex >= this.playList.length){
               this.playIndex = 0;
+            }
+            if(this.playId == this.playList[this.playIndex].id){
+              if(!this.music.type){
+                this.updateHotCount(this.music.id)
+              }
             }
             this.$store.commit('setPlayId',this.playList[this.playIndex].id);
             console.log(this.music)
@@ -433,12 +447,13 @@ export default {
       this.$forceUpdate()
       console.log(this.lrcArr);
 //      setTimeout(()=>{
-        this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
-          mouseWheel: true,
-          taps: true,
-          scrollY: true,
-          scrollX: false,
-        })
+//        this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
+//          mouseWheel: true,
+//          taps: true,
+//          scrollY: true,
+//          scrollX: false,
+//        })
+      this.scroll.refresh();
 //      },50)
 
     },
@@ -453,7 +468,7 @@ export default {
                   let avtiveLrc = document.querySelector('.activeLrc');
                   if(this.scroll){
                     this.scroll.refresh();
-                    this.scroll.scrollToElement(avtiveLrc,300,0,true);
+                    this.scroll.scrollToElement(avtiveLrc,300,0,-28 * (Math.floor(this.showLineNum / 2) - 2));
                   }
                 }
                 break;
@@ -464,7 +479,7 @@ export default {
               console.log(this.lrcIndex);
               let avtiveLrc = document.querySelector('.activeLrc');
               if(this.scroll){
-                this.scroll.scrollToElement(avtiveLrc,300,0,true);
+                this.scroll.scrollToElement(avtiveLrc,300,0,-28 * (Math.floor(this.showLineNum / 2) - 2));
               }
             }
 
@@ -530,12 +545,13 @@ export default {
               this.lrcArr.push([res.data.lrclist[i].time, res.data.lrclist[i].lineLyric])
             }
           }
-          this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
-            mouseWheel: true,
-            taps: true,
-            scrollY: true,
-            scrollX: false,
-          })
+//          this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
+//            mouseWheel: true,
+//            taps: true,
+//            scrollY: true,
+//            scrollX: false,
+//          })
+          this.scroll.refresh();
           console.log(this.lrcArr)
         }else {
           this.isGeting = 'error'
@@ -578,6 +594,27 @@ export default {
             }
         }
 
+    },
+    updateHotCount(id) {
+      var hotData = {
+        musicId: id
+      }
+
+      this.$.ajax({
+        method:'POST',
+        url:'updateHotCount.php',
+        data:this.qs(hotData)
+      }).then((data)=>{
+        if(data.code == 0){
+          console.log('hot值更新成功')
+        }else if(data.code == -2){
+          console.log('hot值更新失败')
+        }else if(data.code == -1){
+          console.log('参数错误')
+        }
+      }).catch((err)=>{
+        console.log('hot值更新失败',err);
+      })
     }
   },
   watch:{
@@ -597,7 +634,7 @@ export default {
                   let avtiveLrc = document.querySelector('.activeLrc');
                   this.scroll.refresh();
                   if(this.scroll){
-                    this.scroll.scrollToElement(avtiveLrc,0,0,true);
+                    this.scroll.scrollToElement(avtiveLrc,0,0,-28 * (Math.floor(this.showLineNum / 2) - 2));
                   }
                   console.log(this.lrcIndex)
                 },500)
@@ -624,6 +661,15 @@ export default {
             this.music.mp3Url = '';
             this.getQQurl()
         }
+      if(!this.music.type){
+        this.updateHotCount(this.music.id)
+      }
+      //uc浏览器不自动播放
+      setTimeout(()=>{
+        if(!this.isPlay && this.music.mp3Url){
+            this.audio.play()
+        }
+      },1000)
     },
     isPlay(){
         if(this.isPlay){
@@ -659,17 +705,30 @@ export default {
         }
 
         let lrcBox = document.querySelector('.lrcBox');
-        console.log(lrcBox.clientHeight);
+//        alert(lrcBox.clientHeight);
         let boxHeight = lrcBox.clientHeight;
         if(boxHeight > 28){
             boxHeight = boxHeight - (boxHeight % 28);
             lrcBox.style.height = boxHeight + 'px'
         }
+        console.log(boxHeight, (boxHeight / 28));
+        this.showLineNum = boxHeight / 28;
+        if(this.showLineNum){
+            localStorage.setItem('lineNum',this.showLineNum)
+        }else {
+            this.showLineNum = Number(localStorage.getItem('lineNum'))
+        }
+        this.scroll = new BScroll(this.$refs.lrcBox,{click:true,
+          mouseWheel: true,
+          taps: true,
+          scrollY: true,
+          scrollX: false,
+        })
 
       });
 
       this.audio = document.querySelector('.audio');
-      console.log(this.audio);
+//      alert.log(this.audio);
       if(!this.isGet && !!this.music.lrcUrl && this.music.type != 'kuwo'){
           this.getLrc();
       }else if(!this.isGet && this.music.type == 'kuwo'){
@@ -679,12 +738,23 @@ export default {
       if(this.music.type == 'netease' && !this.music.mp3Url){
         this.getWangyi();
       }
+//      alert('1111111')
       this.playScroll = new BScroll(this.$refs.playListContent,{click:true,
         mouseWheel: true,
         taps: true,
         scrollY: true,
         scrollX: false,
       });
+//    alert('22222222222')
+      if(!this.music.type){
+        this.updateHotCount(this.music.id)
+      }
+    //uc浏览器不自动播放
+    setTimeout(()=>{
+      if(!this.isPlay && this.music.mp3Url){
+        this.audio.play()
+      }
+    },1000)
 
       //监听返回
     if (window.history && window.history.pushState) {

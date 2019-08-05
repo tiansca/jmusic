@@ -196,9 +196,6 @@ export default {
       if(this.playId != item.id){
         this.$store.commit('setPlayId',item.id);
         this.$store.commit('setPlayList',this.searchList);
-        if(!item.type){
-            this.updateHotCount(item.id)
-        }
       }
       this.$store.commit('setShowPlay',true);
     },
@@ -276,27 +273,6 @@ export default {
           duration: 3000
         });
       });
-    },
-    updateHotCount(id) {
-      var hotData = {
-        musicId: id
-      }
-
-      this.$.ajax({
-        method:'POST',
-        url:'updateHotCount.php',
-        data:this.qs(hotData)
-      }).then((data)=>{
-        if(data.code == 0){
-          console.log('hot值更新成功')
-        }else if(data.code == -2){
-          console.log('hot值更新失败')
-        }else if(data.code == -1){
-          console.log('参数错误')
-        }
-      }).catch((err)=>{
-        console.log('hot值更新失败',err);
-      })
     }
   },
   mounted(){

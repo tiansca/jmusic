@@ -210,6 +210,7 @@ export default {
           this.scroll.scrollTo(0, 0, 300)
         }
         if(back){
+            console.log('****************0')
           if(next === true && this.playList.length == 1){
             this.audio.pause();
             this.audio.currentTime = 0;
@@ -241,6 +242,7 @@ export default {
           }
         }else {
           if(next === true && this.playList.length == 1){
+              console.log('***********************1')
               this.audio.pause();
               this.audio.currentTime = 0;
               this.audio.play();
@@ -260,10 +262,16 @@ export default {
               if(!this.music.type){
                 this.updateHotCount(this.music.id)
               }
+              setTimeout(()=>{
+                if(!this.isPlay && this.music.mp3Url){
+                  this.audio.play()
+                }
+              },1000)
             }
             this.$store.commit('setPlayId',this.playList[this.playIndex].id);
             console.log(this.music)
           }else if(this.playMode == 3){
+            console.log('****************3');
             if(this.playList.length > 1){
               let newIndex = Math.floor(Math.random() * this.playList.length);
               if(newIndex == this.playIndex){
@@ -285,6 +293,11 @@ export default {
             this.audio.play()
           }
         })
+        setTimeout(()=>{
+          if(!this.isPlay && this.music.mp3Url){
+            this.audio.play()
+          }
+        },1000)
 
     },
     error(){
@@ -488,34 +501,32 @@ export default {
   //  获取网易mp3链接
     getWangyi(){
       this.$.ajax({
-        url:'https://api.imjad.cn/cloudmusic/?type=song&id=' + this.music.id + '&search_type=1',
+        url:'http://liyq.club/wangyi/play/get.php?song=' + this.music.id,
         method:'GET'
       }).then((res)=>{
         console.log(res);
-        if(res.code == 200){
-          if(res.data[0].url){
-            this.music.mp3Url = res.data[0].url,
-            this.audio.play()
-          }else {
-            this.$toast({
-              message: '无法播放此歌曲',
-              position: 'bottom',
-              duration: 3000
-            });
-            if(this.playList.length > 0){
-//              this.ended(true);
-            }else {
-              this.$store.commit('setPlayId',null)
+        if(res.url){
+          this.music.mp3Url = res.url,
+          this.audio.play();
+          setTimeout(()=>{
+            if(!this.isPlay && this.music.mp3Url){
+              this.audio.play()
             }
-
-          }
+          },1000)
         }else {
           this.$toast({
             message: '无法播放此歌曲',
             position: 'bottom',
             duration: 3000
           });
+          if(this.playList.length > 0){
+//              this.ended(true);
+          }else {
+            this.$store.commit('setPlayId',null)
+          }
+
         }
+
       }).catch(err=>{
         this.$toast({
           message: '无法播放此歌曲',

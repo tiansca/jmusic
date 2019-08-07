@@ -506,7 +506,7 @@ export default {
       }).then((res)=>{
         console.log(res);
         if(res.url){
-          this.music.mp3Url = res.url,
+          this.music.mp3Url = res.url;
           this.audio.play();
           setTimeout(()=>{
             if(!this.isPlay && this.music.mp3Url){

@@ -144,7 +144,7 @@ export default {
             })
           }else{
             this.$.ajax({
-              url:'http://liyq.club/music/search.php',
+              url:'http://182.92.210.246/music/search.php',
               method:'POST',
               data:this.qs({
                 input: this.searchValue,
@@ -228,7 +228,7 @@ export default {
     getMore(page){
       this.moreLoading = true;
       this.$.ajax({
-        url:'http://liyq.club/music/search.php',
+        url:'http://182.92.210.246/music/search.php',
         method:'POST',
         data:this.qs({
           input: this.searchValue,

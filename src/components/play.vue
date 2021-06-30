@@ -106,13 +106,16 @@
     </mt-popup>
 
     <audio class="audio" :src="music.mp3Url" controls autoplay="autoplay"  @ended="ended" @play="start" @error="error" @timeupdate="timeupdate" hidden="true" @pause="onPause" ></audio>
+
+    <!--    下载 -->
+    <iframe :src="downloadUrl"></iframe>
   </div>
 
 </template>
 
 <script>
   import BScroll from 'better-scroll'
-  import FileSaver from 'file-saver';
+  // import FileSaver from 'file-saver';
 export default {
   name: 'play',
   computed:{
@@ -377,8 +380,16 @@ export default {
         }
     },
     download(url, name){
-        // this.downloadUrl = this.music.mp3Url;
-        FileSaver.saveAs(url, name)
+      // try {
+      //   var isFileSaverSupported = !!new Blob;
+      //   FileSaver.saveAs(url, name)
+      // } catch (e) {
+      //   window.open(url)
+      // }
+        this.downloadUrl = this.music.mp3Url;
+        setTimeout(() => {
+          this.downloadUrl = ''
+        }, 200)
     },
     clickMusic(item){
       if(this.playId != item.id){

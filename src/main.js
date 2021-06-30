@@ -10,6 +10,7 @@ import axios from 'axios'
 import $ from './util.js'
 import 'font-awesome/css/font-awesome.min.css'
 import 'mint-ui/lib/style.css'
+import VConsole from "vconsole";
 Vue.prototype.$axios = axios;
 Vue.prototype.$ = $;
 import qs from 'qs';
@@ -24,7 +25,9 @@ Vue.component(Range.name, Range);
 Vue.component(Popup.name, Popup);
 Vue.component(Picker.name, Picker);
 Vue.use(Mint);
-
+if (process.env.NODE_ENV == "development") {
+  new VConsole();
+}
 /* eslint-disable no-new */
 new Vue({
   el: '#app',

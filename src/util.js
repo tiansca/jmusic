@@ -5,7 +5,7 @@ import axios from 'axios';
 axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 //基本配置
 const Util = {
-    baseUtl:'http://182.92.210.246:3000/api/music/'
+    baseUtl:'//tiansc.top/music-back/'
 };
 
 //ajax 通用配置

@@ -192,7 +192,8 @@ export default {
       isGeting:false,
       playScroll:null,
       canBack:false,
-      showLineNum:0
+      showLineNum:0,
+      qqMusicUrl: '/myMusic/'
     }
   },
   methods:{
@@ -304,6 +305,9 @@ export default {
 
     },
     error(){
+        if (this.music.type === 'qq') {
+          return
+        }
         this.music.mp3Url = '';
         this.$toast({
           message: '无法播放此歌曲',
@@ -583,16 +587,50 @@ export default {
       });
     },
     //获取qq链接
-    getQQurl(){
-        //token
-      var url = 'https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg?format=json205361749&platform=yqq&cid=205361749&songmid=' + this.music.id + '&filename=C400' + this.music.id + '.m4a&guid=126548449';
-      url = encodeURIComponent(url);
-      this.$.ajax({
-        url:'http://localhost/get/qqtoken.php?url=' + url,
-        method:'GET'
-      }).then((res)=>{
+    async getQQurl() {
+      //封面
+      this.music.cover = `https://y.gtimg.cn/music/photo_new/T002R300x300M000${this.music.albummid}.jpg`
+      try {
+        const res = await this.$.ajax({
+          url: `${this.qqMusicUrl}/song/urls`,
+          method: 'get',
+          params: {
+            id: this.music.id,
+            ownCookie: 1
+            // ownCookie: 1
+          }
+        })
         console.log(res)
-      })
+        if (res.result === 100) {
+          for (const key in res.data) {
+            this.music.mp3Url = res.data[key]
+            return
+          }
+        }
+        if (!this.music.mp3Url) {
+          debugger
+          this.$toast({
+            message: '无法播放此歌曲',
+            position: 'bottom',
+            duration: 3000
+          });
+        }
+      } catch (e) {
+        console.log(e)
+        this.$toast({
+          message: '无法播放此歌曲',
+          position: 'bottom',
+          duration: 3000
+        });
+      }
+      if (this.music.mp3Url) {
+        this.audio.play();
+        setTimeout(()=>{
+          if(!this.isPlay && this.music.mp3Url){
+            this.audio.play()
+          }
+        },1000)
+      }
     },
     //监听返回
     goBack(){
@@ -637,6 +675,31 @@ export default {
       }).catch((err)=>{
         console.log('hot值更新失败',err);
       })
+    },
+    async getQQLrc() {
+      this.isGeting = true;
+      try {
+        const res = await this.$.ajax({
+          url: `${this.qqMusicUrl}lyric`,
+          method: 'get',
+          params: {
+            songmid: this.music.id,
+            ownCookie: 1
+            // ownCookie: 1
+          }
+        })
+        console.log(res)
+        if (res.result === 100) {
+          // this.lrcArr = res.data.lyric.split('\n')
+          var geciArr = res.data.lyric.split('\n');
+          if(geciArr.length > 0){
+            this.parsinglrc(geciArr);
+          }
+        }
+      } catch (e) {
+        console.log(e)
+      }
+      this.isGeting = 'finish';
     }
   },
   watch:{
@@ -663,35 +726,44 @@ export default {
             }
         }
     },
-    playId(){
+    playId: {
+      handler(n) {
+        if (!n) {
+          return
+        }
         this.isGet = false;
         this.isPlay = false;
         console.log('*********'+this.isPlay);
         if(this.music.lrcUrl && this.music.type != 'kuwo'){
           this.getLrc();
         }else if(this.music.type == 'kuwo'){
-            this.getKuwoLrc();
+          this.getKuwoLrc();
         }
         this.lrcIndex = null;
         this.lrcArr = [];
-        this.audio.currentTime = 0;
-        this.audio.pause();
+        if (this.audio) {
+          this.audio.currentTime = 0;
+          this.audio.pause();
+        }
         if(this.music.type == 'netease' && !this.music.mp3Url){
           this.getWangyi();
         }
         if(this.music.type == 'qq'){
-            this.music.mp3Url = '';
-            this.getQQurl()
+          this.music.mp3Url = '';
+          this.getQQurl()
+          this.getQQLrc()
         }
-      if(!this.music.type){
-        this.updateHotCount(this.music.id)
-      }
-      //uc浏览器不自动播放
-      setTimeout(()=>{
-        if(!this.isPlay && this.music.mp3Url){
+        if(!this.music.type){
+          this.updateHotCount(this.music.id)
+        }
+        //uc浏览器不自动播放
+        setTimeout(()=>{
+          if(this.audio && !this.isPlay && this.music.mp3Url){
             this.audio.play()
-        }
-      },1000)
+          }
+        },1000)
+      },
+      immediate: true
     },
     isPlay(){
         if(this.isPlay){

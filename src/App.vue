@@ -92,7 +92,9 @@ export default {
         topLoading:false,
         isTopLoading:false,
         isTopLoading1:false,
-        topLoadingText:''
+        topLoadingText:'',
+        // qqMusicUrl: 'http://api.tiansc.top/api/qqmusic/'
+        qqMusicUrl: '/myMusic/'
       }
   },
   methods:{
@@ -101,95 +103,98 @@ export default {
         this.searchList = [];
         this.page = 1;
     },
-    search(type){
-        this.page = 1;
-        this.$refs.search.blur();
-        this.searchFinish = false;
-        if(!this.searchValue){
-          this.$toast({
-            message: '搜索内容不能为空',
-            position: 'bottom',
-            duration: 3000
-          });
-        }else {
-          if(type !== 'refresh'){
-            this.isLoading = true;
-            this.searchList = [];
-          }
-          if(this.sourceId == 1){
-            this.$.ajax({
-              method:'GET',
-              url:'getMusicList.php?keyword=' + this.searchValue + '&type=' + this.searchType,
-            }).then((res)=>{
-              this.searchFinish = true;
-              this.isTopLoading = false;
-              console.log(res);
-              this.searchList = res;
-              this.isLoading = false;
-              setTimeout(()=>{
+    async search(type) {
+      this.page = 1;
+      this.$refs.search.blur();
+      this.searchFinish = false;
+      if (!this.searchValue) {
+        this.$toast({
+          message: '搜索内容不能为空',
+          position: 'bottom',
+          duration: 3000
+        });
+      } else {
+        if (type !== 'refresh') {
+          this.isLoading = true;
+          this.searchList = [];
+        }
+        if (this.sourceId == 1) {
+          this.$.ajax({
+            method: 'GET',
+            url: 'getMusicList.php?keyword=' + this.searchValue + '&type=' + this.searchType,
+          }).then((res) => {
+            this.searchFinish = true;
+            this.isTopLoading = false;
+            console.log(res);
+            this.searchList = res;
+            this.isLoading = false;
+            setTimeout(() => {
+              this.scroll.refresh()
+            });
+            this.scroll.finishPullDown()
+          }).catch((err) => {
+            this.searchFinish = true;
+            this.isTopLoading = false;
+            this.isLoading = false;
+            console.log(err);
+            this.scroll.finishPullDown()
+            this.$toast({
+              message: '搜索失败，请重试',
+              position: 'bottom',
+              duration: 3000
+            });
+          })
+        } else if (this.sourceId == 2) {
+          console.log('qq')
+          this.qqSearch(this.searchValue)
+        } else {
+          this.$.ajax({
+            url: '//tiansc.top/music/search.php',
+            method: 'POST',
+            data: this.qs({
+              input: this.searchValue,
+              filter: 'name',
+              type: this.source.label,
+              page: this.page
+            })
+          }).then((res) => {
+            console.log(res);
+            this.scroll.finishPullDown();
+            this.isTopLoading = false;
+            this.searchFinish = true;
+            this.isLoading = false;
+            if (res.code == 200) {
+              this.buildList(res.data);
+              setTimeout(() => {
                 this.scroll.refresh()
-              });
-              this.scroll.finishPullDown()
-            }).catch((err)=>{
+              })
+            } else if (res.code == 404) {
               this.searchFinish = true;
-              this.isTopLoading = false;
               this.isLoading = false;
-              console.log(err);
-              this.scroll.finishPullDown()
+            } else {
+              this.searchFinish = true;
+              this.isLoading = false;
               this.$toast({
                 message: '搜索失败，请重试',
                 position: 'bottom',
                 duration: 3000
               });
-            })
-          }else{
-            this.$.ajax({
-              url:'//tiansc.top/music/search.php',
-              method:'POST',
-              data:this.qs({
-                input: this.searchValue,
-                filter: 'name',
-                type: this.source.label,
-                page: this.page
-              })
-            }).then((res)=>{
-              console.log(res);
-              this.scroll.finishPullDown();
-              this.isTopLoading = false;
-              this.searchFinish = true;
-              this.isLoading = false;
-              if(res.code == 200){
-                this.buildList(res.data);
-                setTimeout(()=>{
-                  this.scroll.refresh()
-                })
-              }else if(res.code == 404){
-                this.searchFinish = true;
-                this.isLoading = false;
-              }else {
-                this.searchFinish = true;
-                this.isLoading = false;
-                this.$toast({
-                  message: '搜索失败，请重试',
-                  position: 'bottom',
-                  duration: 3000
-                });
-              }
-            }).catch(err=>{
-                this.scroll.finishPullDown();
-                this.isTopLoading = false;
-                this.searchFinish = true;
-                this.isLoading = false;
-                console.log(err);
-                this.$toast({
-                  message: '搜索失败，请重试',
-                  position: 'bottom',
-                  duration: 3000
-                });
+            }
+          }).catch(err => {
+            this.scroll.finishPullDown();
+            this.isTopLoading = false;
+            this.searchFinish = true;
+            this.isLoading = false;
+            console.log(err);
+            this.$toast({
+              message: '搜索失败，请重试',
+              position: 'bottom',
+              duration: 3000
             });
-          }
-
+          });
         }
+
+      }
     },
     playMusic(item){
       this.$refs.search.blur();
@@ -205,55 +210,111 @@ export default {
         }
     },
     buildList(list,isMore){
-        for(var i = 0; i < list.length; i++){
-          list[i].artist= list[i].author;
-          list[i].album = null;
-          list[i].mp3Url = list[i].url
-          list[i].cover = list[i].pic
+        if (this.sourceId !== 2){
+          for(var i = 0; i < list.length; i++){
+            list[i].artist= list[i].author;
+            list[i].album = null;
+            list[i].mp3Url = list[i].url
+            list[i].cover = list[i].pic
 
-          if(list[i].lrc){
-            list[i].lrcUrl = 'toLrc'
-          }else {
-            list[i].lrcUrl = 'none'
+            if(list[i].lrc){
+              list[i].lrcUrl = 'toLrc'
+            }else {
+              list[i].lrcUrl = 'none'
+            }
+
+            list[i].id = list[i].songid
           }
+        } else {
+          // qq
+          for(var i = 0; i < list.length; i++){
+            list[i].artist= list[i].singer[0].name; // 作者
+            list[i].album = list[i].albumname;
+            list[i].mp3Url = null
+            list[i].cover = null
+            list[i].title = list[i].songname
 
-          list[i].id = list[i].songid
+            if(list[i].lrc){
+              list[i].lrcUrl = 'toLrc'
+            }else {
+              list[i].lrcUrl = 'none'
+            }
+
+            list[i].id = list[i].songmid
+            list[i].type = 'qq'
+          }
         }
+
         if(isMore){
             this.searchList = this.searchList.concat(list)
         }else {
             this.searchList = list;
         }
     },
-    getMore(page){
+    async getMore() {
       this.moreLoading = true;
+      if (this.sourceId === 2) {
+        // qq
+        try {
+          const res = await this.$.ajax({
+            url: `${this.qqMusicUrl}search`,
+            method: 'get',
+            params: {
+              key: this.searchValue,
+              pageNo: ++this.page
+              // ownCookie: 1
+            }
+          })
+          this.scroll.finishPullUp()
+          // this.page = page + 1;
+          this.searchFinish = true;
+          this.moreLoading = false;
+          if (res.result === 100) {
+            this.buildList(res.data.list, true);
+            setTimeout(() => {
+              this.scroll.refresh()
+            })
+          }
+        } catch (e) {
+          this.scroll.finishPullUp()
+          this.searchFinish = true;
+          this.moreLoading = false;
+          console.log(e);
+          this.$toast({
+            message: '搜索失败，请重试',
+            position: 'bottom',
+            duration: 3000
+          });
+        }
+        return
+      }
       this.$.ajax({
-        url:'//tiansc.top/music/search.php',
-        method:'POST',
-        data:this.qs({
+        url: '//tiansc.top/music/search.php',
+        method: 'POST',
+        data: this.qs({
           input: this.searchValue,
           filter: 'name',
           type: this.source.label,
-          page: page + 1
+          page: ++this.page
         })
-      }).then((res)=>{
+      }).then((res) => {
 //        console.log(res);
         this.scroll.finishPullUp()
-        this.page = page + 1;
+        // this.page = page + 1;
         this.searchFinish = true;
         this.moreLoading = false;
-        if(res.code == 200){
+        if (res.code == 200) {
           this.buildList(res.data, true);
-          setTimeout(()=>{
+          setTimeout(() => {
             this.scroll.refresh()
           })
-        }else if(res.code == 404){
+        } else if (res.code == 404) {
           this.$toast({
             message: '没有更多',
             position: 'bottom',
             duration: 3000
           });
-        }else {
+        } else {
           this.searchFinish = true;
           this.moreLoading = false;
           this.$toast({
@@ -262,7 +323,7 @@ export default {
             duration: 3000
           });
         }
-      }).catch(err=>{
+      }).catch(err => {
         this.scroll.finishPullUp()
         this.searchFinish = true;
         this.moreLoading = false;
@@ -273,7 +334,64 @@ export default {
           duration: 3000
         });
       });
+    },
+    async setQQCookie() {
+      // /user/cookie
+      const res = await this.$.ajax({
+        url: `${this.qqMusicUrl}user/getCookie`,
+        method: 'get',
+        params: {
+          id: '1264197264'
+          // ownCookie: 1
+        }
+      })
+      console.log(res)
+      // const res1 = await this.$.ajax({
+      //   url: `${this.qqMusicUrl}recommend/daily`,
+      //   method: 'get',
+      //   params: {
+      //     ownCookie: 1
+      //   }
+      // })
+      // console.log(res1)
+    },
+    async qqSearch(key) {
+      this.scroll.finishPullDown();
+      this.isTopLoading = false;
+      this.searchFinish = true;
+      this.isLoading = false;
+      try {
+        const res = await this.$.ajax({
+          url: `${this.qqMusicUrl}search`,
+          method: 'get',
+          params: {
+            key: key,
+            pageNo: this.page
+            // ownCookie: 1
+          }
+        })
+        if (res.result === 100) {
+          this.buildList(res.data.list);
+          setTimeout(() => {
+            this.scroll.refresh()
+          })
+        }
+      } catch (e) {
+        this.scroll.finishPullDown();
+        this.isTopLoading = false;
+        this.searchFinish = true;
+        this.isLoading = false;
+        console.log(err);
+        this.$toast({
+          message: '搜索失败，请重试',
+          position: 'bottom',
+          duration: 3000
+        });
+      }
     }
+  },
+  created() {
+    this.setQQCookie()
   },
   mounted(){
     this.scroll = new BScroll(this.$refs.listBox,{click:true,

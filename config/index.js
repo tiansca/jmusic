@@ -10,7 +10,20 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      // 这里配置 '/api' 就等价于 target , 你在链接里访问 /api === http://localhost:54321
+      '/myMusic': {
+        target: 'http://47.95.5.207:3011/', // 真是服务器的接口地址 // http://localhost:54321/json.data.json,
+        pathRewrite: {
+          // 这里是追加链接,比如真是接口里包含了 /api,就需要这样配置.
+
+          '^/myMusic': '/',
+          // 等价于
+          // step 1  /api = http://localhost:54321/
+          // step 2 /^api = /api + api == http://localhost:54321/api
+        }
+      }
+    },
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST

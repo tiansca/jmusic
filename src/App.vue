@@ -93,8 +93,8 @@ export default {
         isTopLoading:false,
         isTopLoading1:false,
         topLoadingText:'',
-        // qqMusicUrl: 'http://api.tiansc.top/api/qqmusic/'
-        qqMusicUrl: '/myMusic/'
+        qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
+        // qqMusicUrl: '/myMusic/'
       }
   },
   methods:{
@@ -149,7 +149,7 @@ export default {
           this.qqSearch(this.searchValue)
         } else {
           this.$.ajax({
-            url: '//tiansc.top/music/search.php',
+            url: 'https://tiansc.top/music/search.php',
             method: 'POST',
             data: this.qs({
               input: this.searchValue,
@@ -289,7 +289,7 @@ export default {
         return
       }
       this.$.ajax({
-        url: '//tiansc.top/music/search.php',
+        url: 'https://tiansc.top/music/search.php',
         method: 'POST',
         data: this.qs({
           input: this.searchValue,

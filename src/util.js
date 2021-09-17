@@ -7,12 +7,12 @@ axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded
 axios.defaults.withCredentials = true;
 //基本配置
 const Util = {
-    baseUtl:'//api.tiansc.top/music/'
+    baseUtl:'https://api.tiansc.top/api/music/'
 };
 
 //ajax 通用配置
 Util.ajax = axios.create({
-    // baseURL:Util.baseUtl,
+    baseURL:Util.baseUtl,
 });
 
 //添加响应拦截器

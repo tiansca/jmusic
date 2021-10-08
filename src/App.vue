@@ -121,7 +121,7 @@ export default {
         if (this.sourceId == 1) {
           this.$.ajax({
             method: 'GET',
-            url: 'getMusicList.php?keyword=' + this.searchValue + '&type=' + this.searchType,
+            url: 'getMusicList.php?keyword=' + this.searchValue + '&type=' + this.searchType
           }).then((res) => {
             this.searchFinish = true;
             this.isTopLoading = false;

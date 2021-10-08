@@ -430,6 +430,7 @@ export default {
       this.$.ajax({
         url:'https://tiansc.top/music-back/getLrc.php?myUrl=' + this.music.lrcUrl,
         method: 'GET',
+        withCredentials: false
       }).then((res)=>{
           console.log(res);
           this.isGeting = 'finish';

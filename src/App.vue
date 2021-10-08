@@ -93,8 +93,8 @@ export default {
         isTopLoading:false,
         isTopLoading1:false,
         topLoadingText:'',
-        qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
-        // qqMusicUrl: '/myMusic/'
+        // qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
+        qqMusicUrl: '/myMusic/'
       }
   },
   methods:{

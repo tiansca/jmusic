@@ -193,8 +193,8 @@ export default {
       playScroll:null,
       canBack:false,
       showLineNum:0,
-      // qqMusicUrl: '/myMusic/',
-      qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
+      qqMusicUrl: '/myMusic/',
+      // qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
     }
   },
   methods:{
@@ -428,7 +428,8 @@ export default {
       }
       this.isGeting = true;
       this.$.ajax({
-        url:'getLrc.php?myUrl=' + this.music.lrcUrl
+        url:'https://tiansc.top/music-back/getLrc.php?myUrl=' + this.music.lrcUrl,
+        method: 'GET',
       }).then((res)=>{
           console.log(res);
           this.isGeting = 'finish';
@@ -593,7 +594,7 @@ export default {
       this.music.cover = `https://y.gtimg.cn/music/photo_new/T002R300x300M000${this.music.albummid}.jpg`
       try {
         const res = await this.$.ajax({
-          url: `${this.qqMusicUrl}/song/urls`,
+          url: `${this.qqMusicUrl}song/urls`,
           method: 'get',
           params: {
             id: this.music.id,
@@ -609,7 +610,6 @@ export default {
           }
         }
         if (!this.music.mp3Url) {
-          debugger
           this.$toast({
             message: '无法播放此歌曲',
             position: 'bottom',

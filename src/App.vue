@@ -93,8 +93,8 @@ export default {
         isTopLoading:false,
         isTopLoading1:false,
         topLoadingText:'',
-        // qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
-        qqMusicUrl: '/myMusic/'
+        qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
+        // qqMusicUrl: '/myMusic/'
       }
   },
   methods:{
@@ -151,6 +151,7 @@ export default {
           this.$.ajax({
             url: 'https://tiansc.top/music/search.php',
             method: 'POST',
+            withCredentials: false,
             data: this.qs({
               input: this.searchValue,
               filter: 'name',

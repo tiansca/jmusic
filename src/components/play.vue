@@ -193,8 +193,8 @@ export default {
       playScroll:null,
       canBack:false,
       showLineNum:0,
-      qqMusicUrl: '/myMusic/',
-      // qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
+      // qqMusicUrl: '/myMusic/',
+      qqMusicUrl: 'https://api.tiansc.top/api/qqmusic/'
     }
   },
   methods:{

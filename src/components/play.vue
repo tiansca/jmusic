@@ -449,12 +449,14 @@ export default {
       var regex2=/ar/g;
       var pattern1 = /\d{2}:\d{2}.\d{3}/g;
       var pattern = /\d{2}:\d{2}.\d{2}/g;
+      var pattern2 = /\d{2}:\d{2}/g;
       var cacheLrc = [];
       // Vue.set(this.song,'lrc',cacheLrc);
       for(let a = 0; a < lrc.length; a++){
+        console.log(lrc[a])
         lrc[a] = lrc[a].replace(regex,'');
         var itemArr = lrc[a].split(":");
-        if(pattern1.test(lrc[a])){
+        if(pattern1.test(lrc[a])){ // 秒数保留三位小时
           var aLrc = [];
           var time = lrc[a].match(pattern1)[0];
           aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1].split('.')[0]);
@@ -463,13 +465,21 @@ export default {
 
           cacheLrc.push(aLrc);
         }else {
-          if(pattern.test(lrc[a])){
+          if(pattern.test(lrc[a])){ // 秒数保留两位小数
             var aLrc = [];
             var time = lrc[a].match(pattern)[0];
             aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1].split('.')[0]);
             aLrc[1] = lrc[a].replace(pattern, '');
             aLrc[1] = aLrc[1].replace(/\r|\n|\\s/, '');
 
+            cacheLrc.push(aLrc);
+          } else if (pattern2.test(lrc[a])) { // 没有小数
+            var aLrc = [];
+            var time = lrc[a].match(pattern2)[0];
+            aLrc[0] = Number(time.split(":")[0]) * 60 + Number(time.split(':')[1]);
+            aLrc[1] = lrc[a].replace(pattern2, '');
+            aLrc[1] = aLrc[1].replace(/\r|\n|\\s/, '');
+            // console.log(aLrc)
             cacheLrc.push(aLrc);
           }
         }

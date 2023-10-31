@@ -131,8 +131,8 @@ export default {
                 // item.mp3Url = decodeURIComponent(item.mp3Url)
                 if (item.mp3Url.indexOf('https://') === -1) {
                   item.mp3Url = item.mp3Url.replace('http://', 'https://')
-                  item.cover = item.cover.replace('http://', 'https://')
                 }
+                item.cover = item.cover.replace('http://', 'https://')
               } catch (e) {console.error(item)}
               return item
             });
